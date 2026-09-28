@@ -44,11 +44,22 @@ import {
 import {
   FieldDescription,
 } from "@/components/ui/field"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 import type { Course } from "@/lib/types";
 
 export default function AdminCoursesPage() {
-  const {courses, removeInstructor, addCourse , removeCourse} = useEnrollmentStore();
+  const { courses, removeInstructor, addCourse, removeCourse } = useEnrollmentStore();
   const [DialogOpen, setDialogOpen] = useState(false);
   const [formCourse, setFormCourse] = useState<string>("");
   const [formCourseCode, setFormCourseCode] = useState<string>("");
@@ -79,6 +90,7 @@ export default function AdminCoursesPage() {
     addCourse(course);
     handleDialogOpenChange(false);
   }
+
 
   const instructors = [...new Set(courses.flatMap((course) => course.instructors ?? []))];
   const newInstructor = instructorQuery.trim();
@@ -124,8 +136,8 @@ export default function AdminCoursesPage() {
                   placeholder="เช่น CPE303"
                   onChange={(e) => setFormCourseCode(e.target.value)}
                   aria-invalid={hasCourse(formCourseCode)}
-                  />
-                  {hasCourse(formCourseCode) && 
+                />
+                {hasCourse(formCourseCode) &&
                   <FieldDescription className="text-destructive">
                     มีรหัสวิชา {formCourseCode} นี้แล้ว
                   </FieldDescription>}
@@ -156,9 +168,9 @@ export default function AdminCoursesPage() {
                           {values.map((value: string) => (
                             <ComboboxChip key={value}>{value}</ComboboxChip>
                           ))}
-                            <ComboboxChipsInput
-                              placeholder={values.length === 0 ? "เลือกหรือพิมพ์ชื่อผู้สอน(ได้หลายคน)" : ""}
-                            />
+                          <ComboboxChipsInput
+                            placeholder={values.length === 0 ? "เลือกหรือพิมพ์ชื่อผู้สอน(ได้หลายคน)" : ""}
+                          />
                         </React.Fragment>
                       )}
                     </ComboboxValue>
@@ -178,11 +190,11 @@ export default function AdminCoursesPage() {
                 </Combobox>
               </div>
             </div>
-            
+
             <DialogFooter>
               <Button
-              disabled={!formCourseCode || !formCourse}
-              onClick={handleSubmit}
+                disabled={!formCourseCode || !formCourse || hasCourse(formCourseCode)}
+                onClick={handleSubmit}
               >
                 <PlusCircle className="h-4 w-4" />
                 ลงทะเบียน
@@ -220,31 +232,48 @@ export default function AdminCoursesPage() {
                   <TableCell>{c.courseTitle}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1">
-                    {
-                      (c.instructors?.length !== 0) ?
-                        c.instructors?.map((i) =>
-                          <Badge variant="outline" className="bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400">
-                            {i}
-                            <button
-                              type="button"
-                              onClick={() => removeInstructor(c, i)}
-                              className="rounded hover:text-destructive"
-                            >
-                              <X className="h-3 w-3" />
-                            </button>
-                          </Badge>
-                        )
-                        : <p className="text-muted-foreground">ยังไม่มีผู้สอน</p>
-                    }
+                      {
+                        (c.instructors?.length !== 0) ?
+                          c.instructors?.map((i) =>
+                            <Badge variant="outline" className="bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400">
+                              {i}
+                              <button
+                                type="button"
+                                onClick={() => removeInstructor(c, i)}
+                                className="rounded hover:text-destructive"
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            </Badge>
+                          )
+                          : <p className="text-muted-foreground">ยังไม่มีผู้สอน</p>
+                      }
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Button
-                      variant="ghost"
-                      onClick={() => removeCourse(c)}
-                    >
-                      <Trash2 className="text-destructive" />
-                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger render={<Button variant="outline" />}>
+                        <Trash2 className="text-destructive" />
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>คุณต้องการลบวิชา {c.courseCode} - {c.courseTitle} หรือไม่?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete your account
+                            from our servers.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
+                          <AlertDialogAction 
+                            variant="destructive"
+                            onClick={() => removeCourse(c)}
+                          >
+                            ยืนยัน
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </TableCell>
                 </TableRow>
               ))
