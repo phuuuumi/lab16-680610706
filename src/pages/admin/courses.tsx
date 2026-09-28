@@ -252,15 +252,14 @@ export default function AdminCoursesPage() {
                   </TableCell>
                   <TableCell>
                     <AlertDialog>
-                      <AlertDialogTrigger render={<Button variant="outline" />}>
+                      <AlertDialogTrigger render={<Button variant="ghost" />}>
                         <Trash2 className="text-destructive" />
                       </AlertDialogTrigger>
                       <AlertDialogContent>
                         <AlertDialogHeader>
-                          <AlertDialogTitle>คุณต้องการลบวิชา {c.courseCode} - {c.courseTitle} หรือไม่?</AlertDialogTitle>
+                          <AlertDialogTitle>ลบวิชา?</AlertDialogTitle>
                           <AlertDialogDescription>
-                            This action cannot be undone. This will permanently delete your account
-                            from our servers.
+                            ต้องการลบวิชา {c.courseCode} - {c.courseTitle} ออกจากรายวิชาที่เปิดสอน?
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
