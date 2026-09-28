@@ -3,19 +3,15 @@ import { persist } from "zustand/middleware";
 import {
   students as initialStudents,
   courses as initialCourses,
-  enrollments as initialEnrollments,
 } from "@/lib/mock-data";
-import type { Course, Enrollment, Student } from "@/lib/types";
+import type { Course, Student } from "@/lib/types";
 
 type EnrollmentStore = {
   students: Student[];
   courses: Course[];
-  enrollments: Enrollment[];
   /** Admin ลงทะเบียนวิชาให้นักศึกษาคนใดก็ได้ (ไม่ซ้ำกับที่มีอยู่แล้ว) */
   enroll: (studentId: string, courseId: string) => void;
   /** Admin ยกเลิกการลงทะเบียนของนักศึกษาคนใดก็ได้ */
-  drop: (studentId: string, courseId: string) => void;
-  /** ลบนักศึกษา พร้อมการลงทะเบียนทั้งหมดของคนนั้น */
   removeStudent: (studentId: string, courseCode: string) => void;
   addCourse: ({ courseCode, courseTitle, instructors }: Course) => void;
   removeCourse: (course: Course) => void;
@@ -28,7 +24,6 @@ export const useEnrollmentStore = create<EnrollmentStore>()(
     (set) => ({
       students: initialStudents,
       courses: initialCourses,
-      enrollments: initialEnrollments,
 
       enroll: (studentId, courseId) =>
         set((state) => ({
@@ -41,12 +36,6 @@ export const useEnrollmentStore = create<EnrollmentStore>()(
           )
         })),
 
-      drop: (studentId, courseId) =>
-        set((state) => ({
-          enrollments: state.enrollments.filter(
-            (e) => !(e.studentId === studentId && e.courseId === courseId),
-          ),
-        })),
 
       addCourse: ({ courseCode, courseTitle, instructors }) =>
         set((state) => ({
