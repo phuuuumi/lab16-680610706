@@ -6,7 +6,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import RootLayout from "@/layouts/root-layout";
 import HomePage from "@/pages/home";
 import AdminEnrollmentsPage from "@/pages/admin/enrollments";
-
+import AdminCoursesPage from "./pages/admin/courses";
 import "./index.css";
 
 const router = createBrowserRouter([
@@ -16,6 +16,7 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <HomePage /> },
       { path: "admin/enrollments", element: <AdminEnrollmentsPage /> },
+      { path: "admin/courses", element: <AdminCoursesPage />}
     ],
   },
 ]);

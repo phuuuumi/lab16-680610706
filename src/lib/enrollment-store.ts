@@ -1,5 +1,5 @@
 import { create } from "zustand";
-
+import { persist } from "zustand/middleware";
 import {
   students as initialStudents,
   courses as initialCourses,
@@ -16,41 +16,76 @@ type EnrollmentStore = {
   /** Admin ยกเลิกการลงทะเบียนของนักศึกษาคนใดก็ได้ */
   drop: (studentId: string, courseId: string) => void;
   /** ลบนักศึกษา พร้อมการลงทะเบียนทั้งหมดของคนนั้น */
-  removeStudent: (studentId: string) => void;
-  /** ลบวิชาออกจากรายวิชาที่เปิดสอน พร้อม cascade ลบ enrollment ที่อ้างถึงวิชานั้นทั้งหมด */
-  removeCourse: (courseId: string) => void;
+  removeStudent: (studentId: string, courseCode: string) => void;
+  addCourse: ({ courseCode, courseTitle, instructors }: Course) => void;
+  removeCourse: (course: Course) => void;
+  removeInstructor: (course: Course, intrusctor: string) => void;
+
 };
 
-export const useEnrollmentStore = create<EnrollmentStore>((set) => ({
-  students: initialStudents,
-  courses: initialCourses,
-  enrollments: initialEnrollments,
+export const useEnrollmentStore = create<EnrollmentStore>()(
+  persist(
+    (set) => ({
+      students: initialStudents,
+      courses: initialCourses,
+      enrollments: initialEnrollments,
 
-  enroll: (studentId, courseId) =>
-    set((state) => ({
-      enrollments: state.enrollments.some(
-        (e) => e.studentId === studentId && e.courseId === courseId,
-      )
-        ? state.enrollments
-        : [...state.enrollments, { studentId, courseId }],
-    })),
+      enroll: (studentId, courseId) =>
+        set((state) => ({
+          students: state.students.map((s) => 
+            s.studentId === studentId ?
+            {
+              ...s, enrolledCourses: [...s.enrolledCourses, courseId]
+            }
+          : s
+          )
+        })),
 
-  drop: (studentId, courseId) =>
-    set((state) => ({
-      enrollments: state.enrollments.filter(
-        (e) => !(e.studentId === studentId && e.courseId === courseId),
-      ),
-    })),
+      drop: (studentId, courseId) =>
+        set((state) => ({
+          enrollments: state.enrollments.filter(
+            (e) => !(e.studentId === studentId && e.courseId === courseId),
+          ),
+        })),
 
-  removeStudent: (studentId) =>
-    set((state) => ({
-      students: state.students.filter((s) => s.studentId !== studentId),
-      enrollments: state.enrollments.filter((e) => e.studentId !== studentId),
-    })),
+      addCourse: ({ courseCode, courseTitle, instructors }) =>
+        set((state) => ({
+          courses: [...state.courses, { courseCode, courseTitle, instructors }],
+        })),
 
-  removeCourse: (courseId) =>
-    set((state) => ({
-      courses: state.courses.filter((c) => c.courseId !== courseId),
-      enrollments: state.enrollments.filter((e) => e.courseId !== courseId),
-    })),
-}));
+      removeCourse: (course) =>
+        set((state) => ({
+          courses: state.courses.filter((c) => c !== course)
+        })),
+
+      removeInstructor: (course, instructor) =>
+        set((state) => ({
+          courses: state.courses.map((c) =>
+            c.courseCode === course.courseCode ?
+              {
+                ...c, instructors: c.instructors?.filter((i) => i !== instructor)
+              }
+              : c
+          )
+        })),
+
+      removeStudent: (studentId: String, courseCode: String) =>
+        set((state) => ({
+          students: state.students.map((s) =>
+            s.studentId === studentId ?
+              {
+                ...s, enrolledCourses: s.enrolledCourses.filter((code) => code !== courseCode)
+              }
+              : s
+          )
+        })),
+    }),
+    {
+      name: "enrollment-storage",
+      partialize: (state) => ({
+        students: state.students,
+        courses: state.courses,
+      }),
+    },
+  ),
+);
